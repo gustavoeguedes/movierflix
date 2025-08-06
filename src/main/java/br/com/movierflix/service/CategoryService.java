@@ -2,6 +2,7 @@ package br.com.movierflix.service;
 
 import br.com.movierflix.entity.Category;
 import br.com.movierflix.repository.CategoryRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

@@ -2,6 +2,8 @@ package br.com.movierflix.controller;
 
 import br.com.movierflix.dto.CategoryDTO;
 import br.com.movierflix.entity.Category;
+import br.com.movierflix.mapper.CategoryMapper;
+import br.com.movierflix.request.CategoryRequest;
 import br.com.movierflix.response.CategoryResponse;
 import br.com.movierflix.service.CategoryService;
 import jakarta.validation.Valid;
@@ -25,32 +27,38 @@ public class CategoryController {
     }
 
     @GetMapping()
-    public List<CategoryResponse> getAllCategories() {
-        return this.categoryService.findAll();
+    public ResponseEntity<List<CategoryResponse>> getAllCategories() {
+
+        List<Category> categories = this.categoryService.findAll();
+        List<CategoryResponse> list = categories.stream()
+                .map(CategoryMapper::toCategoryResponse)
+                .toList();
+        return ResponseEntity.ok(list);
     }
 
     @PostMapping()
-    public CategoryResponse createCategory(@RequestBody  Category categoryToAdd) {
-        return this.categoryService.create(categoryToAdd);
+    public ResponseEntity<CategoryResponse> createCategory(@RequestBody CategoryRequest request) {
+        Category newCategory = CategoryMapper.toCategory(request);
+        Category savedCategory = this.categoryService.create(newCategory);
+        return ResponseEntity.status(HttpStatus.CREATED).body(CategoryMapper.toCategoryResponse(savedCategory));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> findById(@PathVariable Long id) {
-        Optional<Category> category = this.categoryService.findById(id);
-        if (category.isPresent()) {
-            return ResponseEntity.status(HttpStatus.OK).body(category);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Categoria não encontrada");
+    public ResponseEntity<CategoryResponse> findById(@PathVariable Long id) {
+        return this.categoryService.findById(id)
+                .map(category -> ResponseEntity.ok(CategoryMapper.toCategoryResponse(category)))
+                .orElse(ResponseEntity.notFound().build());
+
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity<String> deleteById(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteById(@PathVariable Long id) {
        if (this.categoryService.findById(id).isPresent()) {
            this.categoryService.deleteById(id);
-           return ResponseEntity.status(HttpStatus.OK).body("Categoria deletada com sucesso!");
+           return ResponseEntity.noContent().build();
        }
 
-       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Categoria não encontrada");
+       return ResponseEntity.notFound().build();
     }
 
 
